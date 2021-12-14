@@ -6,6 +6,7 @@ import {
   createUserByEmailAndPassword,
   findUserByEmail,
 } from "../users/users.services";
+import { generateTokens } from "~/utils/jwt";
 
 const router = express.Router();
 
@@ -31,9 +32,11 @@ router.post("/register", async (req, res, next) => {
 
     const user = await createUserByEmailAndPassword(createUser);
 
+    const { accessToken, refreshToken } = generateTokens(user);
+
     res.json({
-      accessToken: "123",
-      user,
+      accessToken,
+      refreshToken,
     });
   } catch (error) {
     if (res.statusCode === 200) {

@@ -1,4 +1,6 @@
 import express, { Request, Response } from "express";
+import auth from "./auth/auth.routes";
+
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -7,11 +9,6 @@ router.get("/", (req, res) => {
   });
 });
 
-router.get("/test", (req, res) => {
-  res.json({
-    message: "API TEST 🧪",
-    data: "test",
-    values: ["test1", "test2", "test3"],
-  });
-});
+router.use("/auth", auth);
+
 export default router;

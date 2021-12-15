@@ -14,3 +14,11 @@ export const createUserByEmailAndPassword = (user: Prisma.UserCreateInput) => {
     data: user,
   });
 };
+
+export const findUserById = (id: string) => {
+  return db.user.findUnique({
+    where: {
+      id,
+    },
+  });
+};

@@ -1,10 +1,13 @@
 import express from "express";
 import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
+import { useCookie } from "h3";
+import jwt from "jsonwebtoken";
 
 import {
   createUserByEmailAndPassword,
   findUserByEmail,
+  findUserById,
 } from "../users/users.services";
 import { generateTokens } from "~/utils/jwt";
 import { sendRefreshToken } from "~~/utils/sendRefreshToken";
@@ -87,6 +90,37 @@ router.post("/login", async (req, res, next) => {
     }
 
     res.status(403).json({ message: error.message });
+  }
+});
+
+router.post("/refresh_token", async (req, res, next) => {
+  try {
+    const token = useCookie(req, "refresh_token");
+    if (!token) {
+      res.status(401);
+      throw new Error("Token missing");
+    }
+    let payload: any = null;
+    payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET!);
+
+    const user = await findUserById(payload.userId);
+
+    if (!user) {
+      res.status(401);
+      throw new Error("Not authorized");
+    }
+
+    const { accessToken, refreshToken } = generateTokens(user);
+
+    sendRefreshToken(res, refreshToken);
+
+    res.json({ accessToken });
+  } catch (error) {
+    if (res.statusCode === 200) {
+      res.status(401);
+    }
+
+    res.status(401).json({ message: error.message });
   }
 });
 

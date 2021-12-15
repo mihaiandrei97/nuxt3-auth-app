@@ -5,15 +5,30 @@
     <!-- for all users -->
     <NuxtLink class="ml-auto text-gray-700 text-xl font-bold hover:text-gray-400" to="/">Home</NuxtLink>
 
-    <!-- for logged in users -->
+    <button v-if="getAccessToken" class="bg-teal-600 rounded-3xl px-4 py-2 text-slate-50" @click="logout">Logout</button>
 
-    <span>Logged in as ...</span>
-    <button class="bg-teal-600 rounded-3xl px-4 py-2 text-slate-50" @click="logout">Logout</button>
+    <template v-if="!getAccessToken">
+      <NuxtLink class="text-gray-700 text-xl font-bold hover:text-gray-400" to="/login">Login</NuxtLink>
+      <NuxtLink class="text-gray-700 text-xl font-bold hover:text-gray-400" to="/signup">Signup</NuxtLink>
+    </template>
 
-    <!-- for logged out users -->
-    <NuxtLink class="text-gray-700 text-xl font-bold hover:text-gray-400" to="/login">Login</NuxtLink>
-    <NuxtLink class="text-gray-700 text-xl font-bold hover:text-gray-400" to="/signup">Signup</NuxtLink>
+    <NuxtLink
+      class="text-gray-700 text-xl font-bold hover:text-gray-400"
+      to="/refresh_token"
+    >Refresh token</NuxtLink>
   </nav>
 </template>
 
-<script></script>
+<script lang="ts">
+import { getAccessToken, setAccessToken } from "~~/auth";
+
+export default {
+  setup() {
+
+    const logout = () => {
+      setAccessToken("")
+    }
+    return { getAccessToken, logout };
+  },
+};
+</script>

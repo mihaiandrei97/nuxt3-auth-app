@@ -5,6 +5,6 @@ export const sendRefreshToken = (res: Response, token: string) => {
   setCookie(res, "refresh_token", token, {
     httpOnly: true,
     sameSite: true,
-    path: "server-api/auth/v1/refresh_token",
+    path: "/server-api/v1/auth",
   });
 };

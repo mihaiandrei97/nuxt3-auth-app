@@ -20,13 +20,19 @@
 </template>
 
 <script lang="ts">
+import axios from "axios";
 import { getAccessToken, setAccessToken } from "~~/auth";
 
 export default {
   setup() {
 
-    const logout = () => {
-      setAccessToken("")
+    const logout = async () => {
+      try {
+        await axios.post('./server-api/v1/auth/logout')
+        setAccessToken("")
+      } catch(e) {
+        console.log(e);
+      }
     }
     return { getAccessToken, logout };
   },

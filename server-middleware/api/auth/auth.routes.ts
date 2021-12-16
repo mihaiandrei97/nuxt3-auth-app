@@ -11,6 +11,11 @@ import {
 } from "../users/users.services";
 import { generateTokens } from "~/utils/jwt";
 import { sendRefreshToken } from "~~/utils/sendRefreshToken";
+import {
+  createRefreshToken,
+  deleteRefreshToken,
+  findRefreshToken,
+} from "./auth.services";
 
 const router = express.Router();
 
@@ -37,6 +42,8 @@ router.post("/register", async (req, res, next) => {
     const user = await createUserByEmailAndPassword(createUser);
 
     const { accessToken, refreshToken } = generateTokens(user);
+
+    await createRefreshToken({ token: refreshToken, userId: user.id });
 
     sendRefreshToken(res, refreshToken);
 
@@ -79,6 +86,12 @@ router.post("/login", async (req, res, next) => {
     }
 
     const { accessToken, refreshToken } = generateTokens(existingUser);
+
+    await createRefreshToken({
+      token: refreshToken,
+      userId: existingUser.id,
+    });
+
     sendRefreshToken(res, refreshToken);
 
     res.json({
@@ -110,7 +123,22 @@ router.post("/refresh_token", async (req, res, next) => {
       throw new Error("Not authorized");
     }
 
+    const savedRefreshToken = await findRefreshToken(token);
+
+    if (!savedRefreshToken) {
+      res.status(401);
+      throw new Error("Not authorized.");
+    }
+
+    if (savedRefreshToken.userId !== payload.userId) {
+      res.status(401);
+      throw new Error("Not authorized");
+    }
+
     const { accessToken, refreshToken } = generateTokens(user);
+
+    await deleteRefreshToken(token);
+    await createRefreshToken({ token: refreshToken, userId: payload.userId });
 
     sendRefreshToken(res, refreshToken);
 
@@ -119,9 +147,19 @@ router.post("/refresh_token", async (req, res, next) => {
     if (res.statusCode === 200) {
       res.status(401);
     }
-
+    sendRefreshToken(res, "");
     res.status(401).json({ message: error.message });
   }
+});
+
+router.post("/logout", async (req, res, next) => {
+  const token = useCookie(req, "refresh_token");
+  await deleteRefreshToken(token);
+  sendRefreshToken(res, "");
+  res.status(200);
+  res.json({
+    data: "success",
+  });
 });
 
 export default router;

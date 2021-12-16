@@ -1,24 +1,17 @@
+// https://www.prisma.io/docs/guides/performance-and-optimization/connection-management#prismaclient-in-long-running-applications
+
 import Prisma from "@prisma/client";
 const { PrismaClient } = Prisma;
-
-let db: Prisma.PrismaClient;
-
-declare global {
-  var __db: Prisma.PrismaClient | undefined;
+// add prisma to the NodeJS global type
+interface CustomNodeJsGlobal extends NodeJS.Global {
+  __db: Prisma.PrismaClient;
 }
 
-// this is needed because in development we don't want to restart
-// the server with every change, but we want to make sure we don't
-// create a new connection to the DB with every change either.
-if (process.env.NODE_ENV === "production") {
-  db = new PrismaClient();
-  db.$connect();
-} else {
-  if (!global.__db) {
-    global.__db = new PrismaClient();
-    global.__db.$connect();
-  }
-  db = global.__db;
-}
+// Prevent multiple instances of Prisma Client in development
+declare const global: CustomNodeJsGlobal;
+
+const db = global.__db || new PrismaClient();
+
+if (process.env.NODE_ENV === "development") global.__db = db;
 
 export { db };
